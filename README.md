@@ -28,6 +28,9 @@ Colors:
 
 The top status line does not appear in screenshots and does not interfere with clicking on the menu bar.
 
+![connected](Resources/connected.png)
+![disconnected](Resources/disconnected.png)
+
 ## How does it achieve that?
 
 IsThereNet uses the native [NWPathMonitor](https://developer.apple.com/documentation/network/nwpathmonitor) API to efficiently check if a connection can be established to Cloudflare's DNS IP `1.1.1.1`.
