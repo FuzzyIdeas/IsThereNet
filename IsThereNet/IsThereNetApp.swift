@@ -10,8 +10,24 @@ import Cocoa
 import Combine
 import Foundation
 import Network
+import os.log
 import ServiceManagement
 import SwiftUI
+
+let FPING = Bundle.main.path(forResource: "fping", ofType: nil)!
+let LOG_PATH = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("IsThereNet.log")
+let LOG_FILE: FileHandle? = {
+    guard FileManager.default.fileExists(atPath: LOG_PATH.path) || FileManager.default.createFile(atPath: LOG_PATH.path, contents: nil, attributes: nil) else {
+        print("Failed to create log file")
+        return nil
+    }
+    guard let file = try? FileHandle(forUpdating: LOG_PATH) else {
+        print("Failed to open log file")
+        return nil
+    }
+    print("Logging to \(LOG_PATH.path)")
+    return file
+}()
 
 private var window: NSWindow = {
     let w = NSWindow(
@@ -76,7 +92,10 @@ private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5) {
 
         windowController.showWindow(nil)
         window.fade(to: 1.0) {
-            window.fade(to: 0.5)
+            guard let appearance = menubarIcon?.button?.effectiveAppearance, appearance.isDark else {
+                return
+            }
+            window.fade(to: 0.7)
         }
 
         guard hideAfter > 0 else { return }
@@ -103,13 +122,94 @@ extension NSWindow {
     }
 }
 
+extension NSAppearance {
+    var isDark: Bool { name == .vibrantDark || name == .darkAqua }
+}
+
+private enum PingStatus: Equatable {
+    case reachable(Double)
+    case timedOut
+    case slow(Double)
+
+    var color: NSColor {
+        switch self {
+        case .reachable: .systemGreen
+        case .timedOut: .systemRed
+        case .slow: .systemYellow
+        }
+    }
+
+    var hideAfter: TimeInterval {
+        switch self {
+        case .reachable: 5
+        case .timedOut: 0
+        case .slow: 10
+        }
+    }
+
+    var message: String {
+        switch self {
+        case let .reachable(time): "OK (\(time) ms)"
+        case .timedOut: "TIMEOUT"
+        case let .slow(time): "SLOW (\(time) ms)"
+        }
+    }
+
+    static func == (lhs: PingStatus, rhs: PingStatus) -> Bool {
+        switch (lhs, rhs) {
+        case (.reachable, .reachable): true
+        case (.timedOut, .timedOut): true
+        case (.slow, .slow): true
+        default: false
+        }
+    }
+
+}
+
+private var menubarIcon: NSStatusItem?
 private var lastColor: NSColor?
 private var lastHideAfter: TimeInterval?
 private var lastStatus: NWPath.Status?
+private var lastPingStatus: PingStatus? {
+    didSet {
+        guard let lastPingStatus, lastPingStatus != oldValue else { return }
+
+        drawColoredTopLine(lastPingStatus.color, hideAfter: lastPingStatus.hideAfter)
+        log("Internet connection: \(lastPingStatus.message)")
+    }
+}
+
 private var monitor: NWPathMonitor?
+private var process: Process? {
+    didSet {
+        oldValue?.terminate()
+        lastPingStatus = nil
+    }
+}
 private var observers: [AnyCancellable] = []
+private let dateFormatter: DateFormatter = {
+    let d = DateFormatter()
+    d.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    return d
+}()
+
+private func log(_ message: String) {
+    let line = "\(dateFormatter.string(from: Date())) \(message)"
+
+    print(line)
+    os_log("%{public}@", message)
+
+    guard let LOG_FILE else {
+        return
+    }
+    LOG_FILE.seekToEndOfFile()
+    LOG_FILE.write("\(line)\n".data(using: .utf8)!)
+}
 
 func start() {
+    NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
+        .sink { _ in menubarIcon = NSStatusBar.system.statusItem(withLength: 1) }
+        .store(in: &observers)
     NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
         .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)
         .sink { _ in
@@ -128,18 +228,15 @@ func start() {
         lastStatus = path.status
 
         switch path.status {
-        case .satisfied:
-            print("Internet connection: ON")
-            drawColoredTopLine(.systemGreen, hideAfter: 5)
+        case .satisfied, .requiresConnection:
+            log("Internet connection: CHECKING")
+            startPingMonitor()
         case .unsatisfied:
-            print("Internet connection: OFF")
+            log("Internet connection: OFF")
+            DispatchQueue.main.async { process = nil }
             drawColoredTopLine(.systemRed, hideAfter: 0)
-        case .requiresConnection:
-            print("Internet connection: MAYBE")
-            drawColoredTopLine(.systemOrange, hideAfter: 5)
         @unknown default:
-            print("Internet connection: UNKNOWN")
-            drawColoredTopLine(.systemYellow, hideAfter: 5)
+            log("Internet connection: \(path.status)")
         }
     }
     monitor!.start(queue: DispatchQueue.global())
@@ -151,13 +248,48 @@ func start() {
     #endif
 }
 
+let MS_REGEX_PATTERN: NSRegularExpression = try! NSRegularExpression(pattern: "([0-9.]+) ms", options: [])
+
+func startPingMonitor() {
+    DispatchQueue.main.async {
+        process = Process()
+        process!.launchPath = FPING
+        process!.arguments = ["--loop", "--size", "12", "--timeout", "500", "--interval", "10000", "1.1.1.1"]
+        process!.qualityOfService = .background
+
+        let pipe = Pipe()
+        process!.standardOutput = pipe
+        pipe.fileHandleForReading.readabilityHandler = { fh in
+            guard let line = String(data: fh.availableData, encoding: .utf8), !line.isEmpty else {
+                fh.readabilityHandler = nil
+                DispatchQueue.main.async { process = nil }
+                return
+            }
+            #if DEBUG
+                print(line)
+            #endif
+
+            /*
+                 * fping output:
+                 * REACHABLE: `1.1.1.1 : [0], 20 bytes, 7.66 ms (7.66 avg, 0% loss)`
+                 * TIMEOUT: `1.1.1.1 : [0], timed out (NaN avg, 100% loss)`
+                 * SLOW: `1.1.1.1 : [0], 20 bytes, 127.66 ms (127.66 avg, 0% loss)`
+             */
+
+            if line.contains("timed out") {
+                lastPingStatus = .timedOut
+            } else if let match = MS_REGEX_PATTERN.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)), let ms = Double((line as NSString).substring(with: match.range(at: 1))) {
+                lastPingStatus = ms > 100 ? .slow(ms) : .reachable(ms)
+            }
+        }
+
+        process!.launch()
+    }
+}
+
 @main
 struct IsThereNetApp: App {
     init() { start() }
 
-    var body: some Scene {
-        Settings {
-            EmptyView()
-        }
-    }
+    var body: some Scene { Settings { EmptyView() }}
 }

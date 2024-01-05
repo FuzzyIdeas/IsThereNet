@@ -10,6 +10,7 @@
 		C781D43C2B4592580050D04A /* IsThereNetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C781D43B2B4592580050D04A /* IsThereNetApp.swift */; };
 		C781D4402B4592590050D04A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C781D43F2B4592590050D04A /* Assets.xcassets */; };
 		C781D4432B4592590050D04A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C781D4422B4592590050D04A /* Preview Assets.xcassets */; };
+		C781D44D2B4815510050D04A /* fping in Resources */ = {isa = PBXBuildFile; fileRef = C781D44C2B4815510050D04A /* fping */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +19,7 @@
 		C781D43F2B4592590050D04A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C781D4422B4592590050D04A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		C781D4442B4592590050D04A /* IsThereNet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IsThereNet.entitlements; sourceTree = "<group>"; };
+		C781D44C2B4815510050D04A /* fping */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = fping; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +52,7 @@
 		C781D43A2B4592580050D04A /* IsThereNet */ = {
 			isa = PBXGroup;
 			children = (
+				C781D44C2B4815510050D04A /* fping */,
 				C781D43B2B4592580050D04A /* IsThereNetApp.swift */,
 				C781D43F2B4592590050D04A /* Assets.xcassets */,
 				C781D4442B4592590050D04A /* IsThereNet.entitlements */,
@@ -124,6 +127,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C781D44D2B4815510050D04A /* fping in Resources */,
 				C781D4432B4592590050D04A /* Preview Assets.xcassets in Resources */,
 				C781D4402B4592590050D04A /* Assets.xcassets in Resources */,
 			);
@@ -269,19 +273,22 @@
 				CODE_SIGN_ENTITLEMENTS = IsThereNet/IsThereNet.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"IsThereNet/Preview Content\"";
 				DEVELOPMENT_TEAM = RDDXV84A73;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = IsThereNet;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.IsThereNet;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -297,19 +304,22 @@
 				CODE_SIGN_ENTITLEMENTS = IsThereNet/IsThereNet.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"IsThereNet/Preview Content\"";
 				DEVELOPMENT_TEAM = RDDXV84A73;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = IsThereNet;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.IsThereNet;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

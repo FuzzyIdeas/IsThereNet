@@ -24,7 +24,7 @@ Colors:
 
 - 🟢 **Green**: connected *(fades out after 5 seconds)*
 - 🔴 **Red**: disconnected *(stays on screen until connection is restored)*
-- 🟡 **Yellow**: might need a second check *(fades out after 5 seconds)*
+- 🟡 **Yellow**: slow internet *(fades out after 10 seconds)*
 
 The top status line does not appear in screenshots and does not interfere with clicking on the menu bar.
 
@@ -56,3 +56,11 @@ If you want to monitor more complex network conditions, you can use a few differ
 
 - [iStat Menus](https://bjango.com/mac/istatmenus/) which is a paid app but does a lot more than just network monitoring (CPU, RAM, Disk, etc)
 - [PeakHour](https://peakhourapp.com/) which is a subscription-based app that does a lot of network monitoring, latency checks, etc
+
+## Logging
+
+IsThereNet logs internet connection status changes to:
+
+- the system log (accessible via Console.app)
+- to a file in `~/Library/Containers/com.lowtechguys.IsThereNet/Data/Library/Caches/IsThereNet.log`
+- to the command line if you run the binary directly
