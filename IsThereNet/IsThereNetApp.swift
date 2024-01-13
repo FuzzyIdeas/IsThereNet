@@ -87,6 +87,7 @@ private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5) {
         containerView.frame = NSRect(x: 0, y: 0, width: NSScreen.main!.frame.width + 10, height: 20)
         containerView.addSubview(box)
 
+        window.setContentSize(NSSize(width: NSScreen.main!.frame.width, height: 20))
         window.contentView = containerView
         window.setFrameOrigin(NSPoint(x: NSScreen.main!.frame.minX - 5, y: NSScreen.main!.frame.maxY - 12))
 
@@ -208,7 +209,15 @@ private func log(_ message: String) {
 
 func start() {
     NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
-        .sink { _ in menubarIcon = NSStatusBar.system.statusItem(withLength: 1) }
+        .sink { _ in
+            menubarIcon = NSStatusBar.system.statusItem(withLength: 1)
+            menubarIcon!.isVisible = false
+        }
+        .store(in: &observers)
+    NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
+        .sink { _ in
+            process?.terminate()
+        }
         .store(in: &observers)
     NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
         .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)
@@ -233,7 +242,10 @@ func start() {
             startPingMonitor()
         case .unsatisfied:
             log("Internet connection: OFF")
-            DispatchQueue.main.async { process = nil }
+            DispatchQueue.main.async {
+                process = nil
+                pingRestartTask = nil
+            }
             drawColoredTopLine(.systemRed, hideAfter: 0)
         @unknown default:
             log("Internet connection: \(path.status)")
@@ -242,7 +254,7 @@ func start() {
     monitor!.start(queue: DispatchQueue.global())
 
     #if !DEBUG
-        if SMAppService.mainApp.status == .notRegistered || SMAppService.mainApp.status == .notFound {
+        if #available(macOS 13, *), SMAppService.mainApp.status == .notRegistered || SMAppService.mainApp.status == .notFound {
             try? SMAppService.mainApp.register()
         }
     #endif
@@ -252,9 +264,11 @@ let MS_REGEX_PATTERN: NSRegularExpression = try! NSRegularExpression(pattern: "(
 
 func startPingMonitor() {
     DispatchQueue.main.async {
+        pingRestartTask = nil
+
         process = Process()
         process!.launchPath = FPING
-        process!.arguments = ["--loop", "--size", "12", "--timeout", "500", "--interval", "10000", "1.1.1.1"]
+        process!.arguments = ["--loop", "--size", "12", "--timeout", "1000", "--interval", "5000", "1.1.1.1"]
         process!.qualityOfService = .background
 
         let pipe = Pipe()
@@ -263,6 +277,7 @@ func startPingMonitor() {
             guard let line = String(data: fh.availableData, encoding: .utf8), !line.isEmpty else {
                 fh.readabilityHandler = nil
                 DispatchQueue.main.async { process = nil }
+                pingRestartTask = mainAsyncAfter(5) { startPingMonitor() }
                 return
             }
             #if DEBUG
@@ -279,11 +294,49 @@ func startPingMonitor() {
             if line.contains("timed out") {
                 lastPingStatus = .timedOut
             } else if let match = MS_REGEX_PATTERN.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)), let ms = Double((line as NSString).substring(with: match.range(at: 1))) {
-                lastPingStatus = ms > 100 ? .slow(ms) : .reachable(ms)
+                guard let status = lastPingStatus, status != .timedOut else {
+                    slowCounter = MAX_COUNTS
+                    fastCounter = MAX_COUNTS
+                    lastPingStatus = ms > 300 ? .slow(ms) : .reachable(ms)
+                    return
+                }
+
+                if ms > 160 {
+                    fastCounter = MAX_COUNTS
+                    if slowCounter == 0 {
+                        slowCounter = MAX_COUNTS
+                        lastPingStatus = .slow(ms)
+                    } else {
+                        slowCounter -= 1
+                    }
+                } else if lastPingStatus == .slow(ms) {
+                    guard ms < 80 else { return }
+                    slowCounter = MAX_COUNTS
+                    if fastCounter == 0 {
+                        fastCounter = MAX_COUNTS
+                        lastPingStatus = .reachable(ms)
+                    } else {
+                        fastCounter -= 1
+                    }
+                } else {
+                    slowCounter = MAX_COUNTS
+                    fastCounter = MAX_COUNTS
+                    lastPingStatus = .reachable(ms)
+                }
             }
         }
 
         process!.launch()
+    }
+}
+
+private let MAX_COUNTS = 2
+
+private var slowCounter = MAX_COUNTS
+private var fastCounter = MAX_COUNTS
+private var pingRestartTask: DispatchWorkItem? {
+    didSet {
+        oldValue?.cancel()
     }
 }
 
