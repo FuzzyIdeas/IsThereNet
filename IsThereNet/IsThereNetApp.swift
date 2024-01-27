@@ -269,7 +269,7 @@ func startPingMonitor() {
         process = Process()
         process!.launchPath = FPING
         process!.arguments = ["--loop", "--size", "12", "--timeout", "1000", "--interval", "5000", "1.1.1.1"]
-        process!.qualityOfService = .background
+        process!.qualityOfService = .userInteractive
 
         let pipe = Pipe()
         process!.standardOutput = pipe
@@ -292,35 +292,52 @@ func startPingMonitor() {
              */
 
             if line.contains("timed out") {
-                lastPingStatus = .timedOut
+                fastCounter = MAX_COUNTS
+                slowCounter = MAX_COUNTS
+
+                if timeoutCounter == 0 {
+                    timeoutCounter = MAX_COUNTS
+                    lastPingStatus = .timedOut
+                } else {
+                    timeoutCounter -= 1
+                }
+
             } else if let match = MS_REGEX_PATTERN.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)), let ms = Double((line as NSString).substring(with: match.range(at: 1))) {
                 guard let status = lastPingStatus, status != .timedOut else {
                     slowCounter = MAX_COUNTS
                     fastCounter = MAX_COUNTS
+                    timeoutCounter = MAX_COUNTS
                     lastPingStatus = ms > 300 ? .slow(ms) : .reachable(ms)
                     return
                 }
 
                 if ms > 160 {
                     fastCounter = MAX_COUNTS
+                    timeoutCounter = MAX_COUNTS
+
                     if slowCounter == 0 {
                         slowCounter = MAX_COUNTS
                         lastPingStatus = .slow(ms)
                     } else {
                         slowCounter -= 1
                     }
+
                 } else if lastPingStatus == .slow(ms) {
                     guard ms < 80 else { return }
                     slowCounter = MAX_COUNTS
+                    timeoutCounter = MAX_COUNTS
+
                     if fastCounter == 0 {
                         fastCounter = MAX_COUNTS
                         lastPingStatus = .reachable(ms)
                     } else {
                         fastCounter -= 1
                     }
+
                 } else {
                     slowCounter = MAX_COUNTS
                     fastCounter = MAX_COUNTS
+                    timeoutCounter = MAX_COUNTS
                     lastPingStatus = .reachable(ms)
                 }
             }
@@ -333,6 +350,7 @@ func startPingMonitor() {
 private let MAX_COUNTS = 2
 
 private var slowCounter = MAX_COUNTS
+private var timeoutCounter = MAX_COUNTS
 private var fastCounter = MAX_COUNTS
 private var pingRestartTask: DispatchWorkItem? {
     didSet {
