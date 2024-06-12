@@ -14,51 +14,6 @@ import os.log
 import ServiceManagement
 import SwiftUI
 
-let FPING = Bundle.main.path(forResource: "fping", ofType: nil)!
-let LOG_PATH = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("IsThereNet.log")
-let LOG_FILE: FileHandle? = {
-    guard FileManager.default.fileExists(atPath: LOG_PATH.path) || FileManager.default.createFile(atPath: LOG_PATH.path, contents: nil, attributes: nil) else {
-        print("Failed to create log file")
-        return nil
-    }
-    guard let file = try? FileHandle(forUpdating: LOG_PATH) else {
-        print("Failed to open log file")
-        return nil
-    }
-    print("Logging to \(LOG_PATH.path)")
-    return file
-}()
-
-private var window: NSWindow = {
-    let w = NSWindow(
-        contentRect: NSRect(x: 0, y: 0, width: NSScreen.main!.frame.width, height: 20),
-        styleMask: [.fullSizeContentView, .borderless],
-        backing: .buffered,
-        defer: false
-    )
-    w.backgroundColor = .clear
-    w.level = NSWindow.Level(Int(CGShieldingWindowLevel()))
-
-    w.isOpaque = false
-    w.hasShadow = false
-    w.hidesOnDeactivate = false
-    w.ignoresMouseEvents = true
-    w.isReleasedWhenClosed = false
-    w.isMovableByWindowBackground = false
-
-    w.sharingType = .none
-    w.setAccessibilityRole(.popover)
-    w.setAccessibilitySubrole(.unknown)
-
-    w.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenDisallowsTiling]
-    w.alphaValue = 0.0
-
-    return w
-}()
-private var windowController = NSWindowController(window: window)
-private var fader: DispatchWorkItem? { didSet { oldValue?.cancel() } }
-private var closer: DispatchWorkItem? { didSet { oldValue?.cancel() } }
-
 private func mainAsyncAfter(_ duration: TimeInterval, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem { action() }
     DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: workItem)
@@ -111,20 +66,6 @@ private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5) {
             }
         }
     }
-}
-
-extension NSWindow {
-    func fade(to alpha: CGFloat, duration: TimeInterval = 1.0, then: (() -> Void)? = nil) {
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = duration
-            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            animator().alphaValue = alpha
-        } completionHandler: { then?() }
-    }
-}
-
-extension NSAppearance {
-    var isDark: Bool { name == .vibrantDark || name == .darkAqua }
 }
 
 private enum PingStatus: Equatable {
@@ -217,6 +158,11 @@ func start() {
     NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
         .sink { _ in
             process?.terminate()
+            if let stream = CONFIG_FS_WATCHER {
+                FSEventStreamStop(stream)
+                FSEventStreamInvalidate(stream)
+                CONFIG_FS_WATCHER = nil
+            }
         }
         .store(in: &observers)
     NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
@@ -260,15 +206,13 @@ func start() {
     #endif
 }
 
-let MS_REGEX_PATTERN: NSRegularExpression = try! NSRegularExpression(pattern: "([0-9.]+) ms", options: [])
-
 func startPingMonitor() {
     DispatchQueue.main.async {
         pingRestartTask = nil
 
         process = Process()
         process!.launchPath = FPING
-        process!.arguments = ["--loop", "--size", "12", "--timeout", "1000", "--interval", "5000", "1.1.1.1"]
+        process!.arguments = ["--loop", "--size", "12", "--timeout", "\(CONFIG.pingTimeoutSeconds.ms)", "--interval", "\(CONFIG.pingIntervalSeconds.ms)", CONFIG.pingIP]
         process!.qualityOfService = .userInteractive
 
         let pipe = Pipe()
@@ -276,8 +220,10 @@ func startPingMonitor() {
         pipe.fileHandleForReading.readabilityHandler = { fh in
             guard let line = String(data: fh.availableData, encoding: .utf8), !line.isEmpty else {
                 fh.readabilityHandler = nil
-                DispatchQueue.main.async { process = nil }
-                pingRestartTask = mainAsyncAfter(5) { startPingMonitor() }
+                DispatchQueue.main.async {
+                    process = nil
+                    pingRestartTask = mainAsyncAfter(5) { startPingMonitor() }
+                }
                 return
             }
             #if DEBUG
@@ -307,7 +253,7 @@ func startPingMonitor() {
                     slowCounter = MAX_COUNTS
                     fastCounter = MAX_COUNTS
                     timeoutCounter = MAX_COUNTS
-                    lastPingStatus = ms > 300 ? .slow(ms) : .reachable(ms)
+                    lastPingStatus = ms > CONFIG.pingSlowThresholdMilliseconds ? .slow(ms) : .reachable(ms)
                     return
                 }
 
@@ -347,8 +293,6 @@ func startPingMonitor() {
     }
 }
 
-private let MAX_COUNTS = 2
-
 private var slowCounter = MAX_COUNTS
 private var timeoutCounter = MAX_COUNTS
 private var fastCounter = MAX_COUNTS
@@ -364,3 +308,143 @@ struct IsThereNetApp: App {
 
     var body: some Scene { Settings { EmptyView() }}
 }
+
+// MARK: Constants
+
+private let MS_REGEX_PATTERN: NSRegularExpression = try! NSRegularExpression(pattern: "([0-9.]+) ms", options: [])
+private let MAX_COUNTS = 2
+private let FPING = Bundle.main.path(forResource: "fping", ofType: nil)!
+private let LOG_PATH = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("IsThereNet.log")
+private let LOG_FILE: FileHandle? = {
+    guard FileManager.default.fileExists(atPath: LOG_PATH.path) || FileManager.default.createFile(atPath: LOG_PATH.path, contents: nil, attributes: nil) else {
+        print("Failed to create log file")
+        return nil
+    }
+    guard let file = try? FileHandle(forUpdating: LOG_PATH) else {
+        print("Failed to open log file")
+        return nil
+    }
+    print("Logging to \(LOG_PATH.path)")
+    return file
+}()
+private let CONFIG_PATH = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("config.json")
+
+// MARK: Config
+
+private struct Config: Codable, Equatable {
+    var pingIP = "1.1.1.1"
+    var pingIntervalSeconds = 5.0
+    var pingTimeoutSeconds = 1.0
+    var pingSlowThresholdMilliseconds = 300.0
+}
+
+private var CONFIG_FS_WATCHER: FSEventStreamRef?
+private var CONFIG: Config = {
+    print("Watching config path: \(CONFIG_PATH.path)")
+
+    CONFIG_FS_WATCHER = FSEventStreamCreate(
+        kCFAllocatorDefault,
+        { _, _, _, _, flags, _ in
+            guard flags.pointee != kFSEventStreamEventFlagHistoryDone else {
+                return
+            }
+
+            guard let data = try? Data(contentsOf: CONFIG_PATH) else {
+                log("Failed to read config.json")
+                return
+            }
+            guard let config = try? JSONDecoder().decode(Config.self, from: data) else {
+                log("Failed to decode config.json")
+                return
+            }
+            guard config != CONFIG else {
+                return
+            }
+
+            CONFIG = config
+            log("Config updated: \(CONFIG)")
+
+            DispatchQueue.main.async {
+                guard process != nil else {
+                    return
+                }
+                process?.terminate()
+                process = nil
+                pingRestartTask = mainAsyncAfter(1) { startPingMonitor() }
+            }
+        },
+        nil, [CONFIG_PATH.path] as [NSString] as NSArray as CFArray,
+        FSEventStreamEventId(UInt32(truncatingIfNeeded: kFSEventStreamEventIdSinceNow)), 0.5 as CFTimeInterval,
+        FSEventStreamCreateFlags(kFSEventStreamCreateFlagNoDefer | kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes)
+    )
+    if let stream = CONFIG_FS_WATCHER {
+        FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
+        FSEventStreamStart(stream)
+    }
+
+    guard let data = try? Data(contentsOf: CONFIG_PATH), let config = try? JSONDecoder().decode(Config.self, from: data) else {
+        let defaultConfig = Config()
+        let prettyJsonEncoder = JSONEncoder()
+        prettyJsonEncoder.outputFormatting = .prettyPrinted
+        try? prettyJsonEncoder.encode(defaultConfig).write(to: CONFIG_PATH)
+
+        return defaultConfig
+    }
+    return config
+}()
+
+// MARK: Extensions
+
+extension Double {
+    var intround: Int { Int(rounded()) }
+}
+
+extension TimeInterval {
+    var ms: Int { (self * 1000).intround }
+}
+
+extension NSWindow {
+    func fade(to alpha: CGFloat, duration: TimeInterval = 1.0, then: (() -> Void)? = nil) {
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = duration
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            animator().alphaValue = alpha
+        } completionHandler: { then?() }
+    }
+}
+
+extension NSAppearance {
+    var isDark: Bool { name == .vibrantDark || name == .darkAqua }
+}
+
+// MARK: Window
+
+private var window: NSWindow = {
+    let w = NSWindow(
+        contentRect: NSRect(x: 0, y: 0, width: NSScreen.main!.frame.width, height: 20),
+        styleMask: [.fullSizeContentView, .borderless],
+        backing: .buffered,
+        defer: false
+    )
+    w.backgroundColor = .clear
+    w.level = NSWindow.Level(Int(CGShieldingWindowLevel()))
+
+    w.isOpaque = false
+    w.hasShadow = false
+    w.hidesOnDeactivate = false
+    w.ignoresMouseEvents = true
+    w.isReleasedWhenClosed = false
+    w.isMovableByWindowBackground = false
+
+    w.sharingType = .none
+    w.setAccessibilityRole(.popover)
+    w.setAccessibilitySubrole(.unknown)
+
+    w.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenDisallowsTiling]
+    w.alphaValue = 0.0
+
+    return w
+}()
+private var windowController = NSWindowController(window: window)
+private var fader: DispatchWorkItem? { didSet { oldValue?.cancel() } }
+private var closer: DispatchWorkItem? { didSet { oldValue?.cancel() } }
