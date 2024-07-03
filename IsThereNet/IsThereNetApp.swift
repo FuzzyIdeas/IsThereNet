@@ -68,6 +68,12 @@ private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5) {
     }
 }
 
+private struct FadeSecondsConfig: Codable, Equatable {
+    var connected: Double? = 5.0
+    var disconnected: Double? = 0.0
+    var slow: Double? = 10.0
+}
+
 private enum PingStatus: Equatable {
     case reachable(Double)
     case timedOut
@@ -83,9 +89,9 @@ private enum PingStatus: Equatable {
 
     var hideAfter: TimeInterval {
         switch self {
-        case .reachable: 5
-        case .timedOut: 0
-        case .slow: 10
+        case .reachable: CONFIG.fadeSeconds?.connected ?? 5
+        case .timedOut: CONFIG.fadeSeconds?.disconnected ?? 0
+        case .slow: CONFIG.fadeSeconds?.slow ?? 10
         }
     }
 
@@ -253,7 +259,7 @@ func startPingMonitor() {
                     slowCounter = MAX_COUNTS
                     fastCounter = MAX_COUNTS
                     timeoutCounter = MAX_COUNTS
-                    lastPingStatus = ms > CONFIG.pingSlowThresholdMilliseconds ? .slow(ms) : .reachable(ms)
+                    lastPingStatus = (CONFIG.pingSlowThresholdMilliseconds > 0 && ms > CONFIG.pingSlowThresholdMilliseconds) ? .slow(ms) : .reachable(ms)
                     return
                 }
 
@@ -336,6 +342,8 @@ private struct Config: Codable, Equatable {
     var pingIntervalSeconds = 5.0
     var pingTimeoutSeconds = 1.0
     var pingSlowThresholdMilliseconds = 300.0
+
+    var fadeSeconds: FadeSecondsConfig? = FadeSecondsConfig()
 }
 
 private var CONFIG_FS_WATCHER: FSEventStreamRef?
