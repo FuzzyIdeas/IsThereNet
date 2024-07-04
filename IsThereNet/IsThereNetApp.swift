@@ -383,9 +383,18 @@ private struct ColorsConfig: Codable, Equatable {
     var disconnected: String? = "systemRed"
     var slow: String? = "systemYellow"
 
-    var connectedColor: NSColor { connected != nil ? NSColor(colorCode: connected!) ?? .systemGreen : .systemGreen }
-    var disconnectedColor: NSColor { disconnected != nil ? NSColor(colorCode: disconnected!) ?? .systemRed : .systemRed }
-    var slowColor: NSColor { slow != nil ? NSColor(colorCode: slow!) ?? .systemYellow : .systemYellow }
+    var connectedColor: NSColor { connected != nil
+        ? NSColor(colorCode: connected!) ?? NSColor(systemColorName: connected!) ?? .systemGreen
+        : .systemGreen
+    }
+    var disconnectedColor: NSColor { disconnected != nil
+        ? NSColor(colorCode: disconnected!) ?? NSColor(systemColorName: disconnected!) ?? .systemRed
+        : .systemRed
+    }
+    var slowColor: NSColor { slow != nil
+        ? NSColor(colorCode: slow!) ?? NSColor(systemColorName: slow!) ?? .systemYellow
+        : .systemYellow
+    }
 }
 
 private struct SoundsConfig: Codable, Equatable {
@@ -475,6 +484,32 @@ private var CONFIG: Config = {
 }()
 
 // MARK: Extensions
+
+extension NSColor {
+    private static let systemColors: [String: NSColor] = [
+        "systemBlue": .systemBlue,
+        "systemBrown": .systemBrown,
+        "systemGray": .systemGray,
+        "systemGreen": .systemGreen,
+        "systemIndigo": .systemIndigo,
+        "systemMint": .systemMint,
+        "systemOrange": .systemOrange,
+        "systemPink": .systemPink,
+        "systemPurple": .systemPurple,
+        "systemRed": .systemRed,
+        "systemTeal": .systemTeal,
+        "systemYellow": .systemYellow,
+        "clear": .clear,
+    ]
+
+    convenience init?(systemColorName: String) {
+        if let color = NSColor.systemColors[systemColorName] {
+            self.init(cgColor: color.cgColor)
+            return
+        }
+        return nil
+    }
+}
 
 extension NSSound {
     func playIfNotDND() {
