@@ -7,6 +7,7 @@
 
 import AppKit
 import Cocoa
+import ColorCode
 import Combine
 import Foundation
 import Intents
@@ -71,32 +72,6 @@ private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5, s
     }
 }
 
-extension NSSound {
-    func playIfNotDND() {
-        if #available(macOS 12.0, *), focused {
-            return
-        }
-        play()
-    }
-}
-
-let SONOMA_TO_ORIGINAL_SOUND_NAMES = [
-    "Mezzo": "Basso",
-    "Breeze": "Blow",
-    "Pebble": "Bottle",
-    "Jump": "Frog",
-    "Funky": "Funk",
-    "Crystal": "Glass",
-    "Heroine": "Hero",
-    "Pong": "Morse",
-    "Sonar": "Ping",
-    "Bubble": "Pop",
-    "Pluck": "Purr",
-    "Sonumi": "Sosumi",
-    "Submerge": "Submarine",
-    "Boop": "Tink",
-]
-
 @available(macOS 12.0, *)
 var focused: Bool {
     guard INFocusStatusCenter.default.authorizationStatus == .authorized else {
@@ -109,33 +84,6 @@ var focused: Bool {
     return INFocusStatusCenter.default.focusStatus.isFocused ?? false
 }
 
-private struct FadeSecondsConfig: Codable, Equatable {
-    var connected: Double? = 5.0
-    var disconnected: Double? = 0.0
-    var slow: Double? = 10.0
-}
-
-private struct SoundsConfig: Codable, Equatable {
-    var connected: String? = "" // e.g. "Funky"
-    var disconnected: String? = "" // e.g. "Mezzo"
-    var slow: String? = "" // e.g. "Submerge"
-    var volume: Float? = 0.7
-
-    var connectedSound: NSSound? { connected != nil ? sound(named: connected!) : nil }
-    var disconnectedSound: NSSound? { disconnected != nil ? sound(named: disconnected!) : nil }
-    var slowSound: NSSound? { slow != nil ? sound(named: slow!) : nil }
-
-    func sound(named name: String) -> NSSound? {
-        guard let s = NSSound(named: name) ?? NSSound(named: SONOMA_TO_ORIGINAL_SOUND_NAMES[name] ?? "") else {
-            return nil
-        }
-
-        s.volume = max(min(volume ?? 0.7, 1.0), 0.0)
-        return s
-    }
-
-}
-
 private enum PingStatus: Equatable {
     case reachable(Double)
     case timedOut
@@ -143,9 +91,9 @@ private enum PingStatus: Equatable {
 
     var color: NSColor {
         switch self {
-        case .reachable: .systemGreen
-        case .timedOut: .systemRed
-        case .slow: .systemYellow
+        case .reachable: CONFIG.colors?.connectedColor ?? .systemGreen
+        case .timedOut: CONFIG.colors?.disconnectedColor ?? .systemRed
+        case .slow: CONFIG.colors?.slowColor ?? .systemYellow
         }
     }
 
@@ -268,7 +216,7 @@ func start() {
                 process = nil
                 pingRestartTask = nil
             }
-            drawColoredTopLine(.systemRed, hideAfter: CONFIG.fadeSeconds?.disconnected ?? 0, sound: CONFIG.sounds?.disconnectedSound)
+            drawColoredTopLine(PingStatus.timedOut.color, hideAfter: PingStatus.timedOut.hideAfter, sound: PingStatus.timedOut.sound)
         @unknown default:
             log("Internet connection: \(path.status)")
         }
@@ -405,7 +353,60 @@ private let LOG_FILE: FileHandle? = {
 }()
 private let CONFIG_PATH = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("config.json")
 
+let SONOMA_TO_ORIGINAL_SOUND_NAMES = [
+    "Mezzo": "Basso",
+    "Breeze": "Blow",
+    "Pebble": "Bottle",
+    "Jump": "Frog",
+    "Funky": "Funk",
+    "Crystal": "Glass",
+    "Heroine": "Hero",
+    "Pong": "Morse",
+    "Sonar": "Ping",
+    "Bubble": "Pop",
+    "Pluck": "Purr",
+    "Sonumi": "Sosumi",
+    "Submerge": "Submarine",
+    "Boop": "Tink",
+]
+
 // MARK: Config
+
+private struct FadeSecondsConfig: Codable, Equatable {
+    var connected: Double? = 5.0
+    var disconnected: Double? = 0.0
+    var slow: Double? = 10.0
+}
+
+private struct ColorsConfig: Codable, Equatable {
+    var connected: String? = "systemGreen"
+    var disconnected: String? = "systemRed"
+    var slow: String? = "systemYellow"
+
+    var connectedColor: NSColor { connected != nil ? NSColor(colorCode: connected!) ?? .systemGreen : .systemGreen }
+    var disconnectedColor: NSColor { disconnected != nil ? NSColor(colorCode: disconnected!) ?? .systemRed : .systemRed }
+    var slowColor: NSColor { slow != nil ? NSColor(colorCode: slow!) ?? .systemYellow : .systemYellow }
+}
+
+private struct SoundsConfig: Codable, Equatable {
+    var connected: String? = "" // e.g. "Funky"
+    var disconnected: String? = "" // e.g. "Mezzo"
+    var slow: String? = "" // e.g. "Submerge"
+    var volume: Float? = 0.7 // relative to system volume, 0.0 - 1.0
+
+    var connectedSound: NSSound? { connected != nil ? sound(named: connected!) : nil }
+    var disconnectedSound: NSSound? { disconnected != nil ? sound(named: disconnected!) : nil }
+    var slowSound: NSSound? { slow != nil ? sound(named: slow!) : nil }
+
+    func sound(named name: String) -> NSSound? {
+        guard let s = NSSound(named: name) ?? NSSound(named: SONOMA_TO_ORIGINAL_SOUND_NAMES[name] ?? "") else {
+            return nil
+        }
+
+        s.volume = max(min(volume ?? 0.7, 1.0), 0.0)
+        return s
+    }
+}
 
 private struct Config: Codable, Equatable {
     var pingIP = "1.1.1.1"
@@ -415,6 +416,7 @@ private struct Config: Codable, Equatable {
 
     var fadeSeconds: FadeSecondsConfig? = FadeSecondsConfig()
     var sounds: SoundsConfig? = SoundsConfig()
+    var colors: ColorsConfig? = ColorsConfig()
 }
 
 private var CONFIG_FS_WATCHER: FSEventStreamRef?
@@ -473,6 +475,15 @@ private var CONFIG: Config = {
 }()
 
 // MARK: Extensions
+
+extension NSSound {
+    func playIfNotDND() {
+        if #available(macOS 12.0, *), focused {
+            return
+        }
+        play()
+    }
+}
 
 extension Double {
     var intround: Int { Int(rounded()) }

@@ -11,6 +11,7 @@
 		C781D4402B4592590050D04A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C781D43F2B4592590050D04A /* Assets.xcassets */; };
 		C781D4432B4592590050D04A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C781D4422B4592590050D04A /* Preview Assets.xcassets */; };
 		C781D44D2B4815510050D04A /* fping in Resources */ = {isa = PBXBuildFile; fileRef = C781D44C2B4815510050D04A /* fping */; };
+		C7AD8E8F2C36A6E5008E4182 /* ColorCode in Frameworks */ = {isa = PBXBuildFile; productRef = C7AD8E8E2C36A6E5008E4182 /* ColorCode */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C7AD8E8F2C36A6E5008E4182 /* ColorCode in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,6 +90,9 @@
 			dependencies = (
 			);
 			name = IsThereNet;
+			packageProductDependencies = (
+				C7AD8E8E2C36A6E5008E4182 /* ColorCode */,
+			);
 			productName = IsThereNet;
 			productReference = C781D4382B4592580050D04A /* IsThereNet.app */;
 			productType = "com.apple.product-type.application";
@@ -116,6 +121,9 @@
 				Base,
 			);
 			mainGroup = C781D42F2B4592570050D04A;
+			packageReferences = (
+				C7AD8E8D2C36A6E5008E4182 /* XCRemoteSwiftPackageReference "WFColorCode" */,
+			);
 			productRefGroup = C781D4392B4592580050D04A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -378,6 +386,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C7AD8E8D2C36A6E5008E4182 /* XCRemoteSwiftPackageReference "WFColorCode" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/1024jp/WFColorCode/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C7AD8E8E2C36A6E5008E4182 /* ColorCode */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C7AD8E8D2C36A6E5008E4182 /* XCRemoteSwiftPackageReference "WFColorCode" */;
+			productName = ColorCode;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C781D4302B4592570050D04A /* Project object */;
 }

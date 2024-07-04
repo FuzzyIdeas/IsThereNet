@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "wfcolorcode",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/1024jp/WFColorCode/",
+      "state" : {
+        "revision" : "f256e6b832184953e0e9a1846b7836fff8d37888",
+        "version" : "2.10.0"
+      }
+    }
+  ],
+  "version" : 2
+}
