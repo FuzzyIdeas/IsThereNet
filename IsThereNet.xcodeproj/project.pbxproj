@@ -20,6 +20,7 @@
 		C781D4422B4592590050D04A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		C781D4442B4592590050D04A /* IsThereNet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IsThereNet.entitlements; sourceTree = "<group>"; };
 		C781D44C2B4815510050D04A /* fping */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = fping; sourceTree = "<group>"; };
+		C7AD8E8C2C369C2E008E4182 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +53,7 @@
 		C781D43A2B4592580050D04A /* IsThereNet */ = {
 			isa = PBXGroup;
 			children = (
+				C7AD8E8C2C369C2E008E4182 /* Info.plist */,
 				C781D44C2B4815510050D04A /* fping */,
 				C781D43B2B4592580050D04A /* IsThereNetApp.swift */,
 				C781D43F2B4592590050D04A /* Assets.xcassets */,
@@ -302,9 +304,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = IsThereNet/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IsThereNet;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSFocusStatusUsageDescription = "The app needs Focus access to pause notification sounds at appropriate times";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -333,9 +337,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = IsThereNet/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IsThereNet;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSFocusStatusUsageDescription = "The app needs Focus access to pause notification sounds at appropriate times";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

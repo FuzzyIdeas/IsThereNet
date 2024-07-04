@@ -9,6 +9,7 @@ import AppKit
 import Cocoa
 import Combine
 import Foundation
+import Intents
 import Network
 import os.log
 import ServiceManagement
@@ -21,7 +22,7 @@ private func mainAsyncAfter(_ duration: TimeInterval, _ action: @escaping () -> 
     return workItem
 }
 
-private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5) {
+private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5, sound: NSSound? = nil) {
     DispatchQueue.main.async {
         lastColor = color
         lastHideAfter = hideAfter
@@ -54,6 +55,8 @@ private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5) {
             window.fade(to: 0.7)
         }
 
+        sound?.playIfNotDND()
+
         guard hideAfter > 0 else { return }
 
         fader = mainAsyncAfter(hideAfter) {
@@ -68,10 +71,69 @@ private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5) {
     }
 }
 
+extension NSSound {
+    func playIfNotDND() {
+        if #available(macOS 12.0, *), focused {
+            return
+        }
+        play()
+    }
+}
+
+let SONOMA_TO_ORIGINAL_SOUND_NAMES = [
+    "Mezzo": "Basso",
+    "Breeze": "Blow",
+    "Pebble": "Bottle",
+    "Jump": "Frog",
+    "Funky": "Funk",
+    "Crystal": "Glass",
+    "Heroine": "Hero",
+    "Pong": "Morse",
+    "Sonar": "Ping",
+    "Bubble": "Pop",
+    "Pluck": "Purr",
+    "Sonumi": "Sosumi",
+    "Submerge": "Submarine",
+    "Boop": "Tink",
+]
+
+@available(macOS 12.0, *)
+var focused: Bool {
+    guard INFocusStatusCenter.default.authorizationStatus == .authorized else {
+        INFocusStatusCenter.default.requestAuthorization { status in
+            log("Focus Status: \(status)")
+        }
+        return false
+    }
+
+    return INFocusStatusCenter.default.focusStatus.isFocused ?? false
+}
+
 private struct FadeSecondsConfig: Codable, Equatable {
     var connected: Double? = 5.0
     var disconnected: Double? = 0.0
     var slow: Double? = 10.0
+}
+
+private struct SoundsConfig: Codable, Equatable {
+    var connected: String? = "" // e.g. "Funky"
+    var disconnected: String? = "" // e.g. "Mezzo"
+    var slow: String? = "" // e.g. "Submerge"
+    var volume: Float? = 0.7
+
+    var connectedSound: NSSound? { connected != nil ? sound(named: connected!) : nil }
+    var disconnectedSound: NSSound? { disconnected != nil ? sound(named: disconnected!) : nil }
+    var slowSound: NSSound? { slow != nil ? sound(named: slow!) : nil }
+
+    func sound(named name: String) -> NSSound? {
+        guard let s = NSSound(named: name) ?? NSSound(named: SONOMA_TO_ORIGINAL_SOUND_NAMES[name] ?? "") else {
+            return nil
+        }
+
+        s.volume = max(min(volume ?? 0.7, 1.0), 0.0)
+        return s
+    }
+
 }
 
 private enum PingStatus: Equatable {
@@ -84,6 +146,14 @@ private enum PingStatus: Equatable {
         case .reachable: .systemGreen
         case .timedOut: .systemRed
         case .slow: .systemYellow
+        }
+    }
+
+    var sound: NSSound? {
+        switch self {
+        case .reachable: CONFIG.sounds?.connectedSound
+        case .timedOut: CONFIG.sounds?.disconnectedSound
+        case .slow: CONFIG.sounds?.slowSound
         }
     }
 
@@ -122,7 +192,7 @@ private var lastPingStatus: PingStatus? {
     didSet {
         guard let lastPingStatus, lastPingStatus != oldValue else { return }
 
-        drawColoredTopLine(lastPingStatus.color, hideAfter: lastPingStatus.hideAfter)
+        drawColoredTopLine(lastPingStatus.color, hideAfter: lastPingStatus.hideAfter, sound: lastPingStatus.sound)
         log("Internet connection: \(lastPingStatus.message)")
     }
 }
@@ -198,7 +268,7 @@ func start() {
                 process = nil
                 pingRestartTask = nil
             }
-            drawColoredTopLine(.systemRed, hideAfter: 0)
+            drawColoredTopLine(.systemRed, hideAfter: CONFIG.fadeSeconds?.disconnected ?? 0, sound: CONFIG.sounds?.disconnectedSound)
         @unknown default:
             log("Internet connection: \(path.status)")
         }
@@ -344,6 +414,7 @@ private struct Config: Codable, Equatable {
     var pingSlowThresholdMilliseconds = 300.0
 
     var fadeSeconds: FadeSecondsConfig? = FadeSecondsConfig()
+    var sounds: SoundsConfig? = SoundsConfig()
 }
 
 private var CONFIG_FS_WATCHER: FSEventStreamRef?
