@@ -64,3 +64,38 @@ IsThereNet logs internet connection status changes to:
 - the system log (accessible via Console.app)
 - to a file in `~/Library/Containers/com.lowtechguys.IsThereNet/Data/Library/Caches/IsThereNet.log`
 - to the command line if you run the binary directly
+
+## Config
+
+To keep the no-UI approach, the app can be configured through editing a JSON file. The file is located at:
+
+```sh
+~/Library/Containers/com.lowtechguys.IsThereNet/Data/Library/Application Support/config.json
+```
+
+The config file looks like this:
+
+```json
+{
+  "sounds" : {
+    "disconnected" : "Mezzo",
+    "slow" : "Submerge",
+    "volume" : 0.4,
+    "connected" : "Funky"
+  },
+  "pingIntervalSeconds" : 5,
+  "pingIP" : "1.1.1.1",
+  "pingSlowThresholdMilliseconds" : 300,
+  "fadeSeconds" : {
+    "connected" : 5,
+    "disconnected" : 0,
+    "slow" : 10
+  },
+  "colors" : {
+    "slow" : "systemYellow",
+    "connected" : "systemGreen",
+    "disconnected" : "systemRed"
+  },
+  "pingTimeoutSeconds" : 1
+}
+```
