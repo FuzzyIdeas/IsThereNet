@@ -64,10 +64,54 @@ var focused: Bool {
     return INFocusStatusCenter.default.focusStatus.isFocused ?? false
 }
 
-private enum PingStatus: Equatable {
+func shellProc(_ launchPath: String = "/bin/zsh", args: [String], env: [String: String]? = nil) -> Process? {
+    let task = Process()
+
+    task.launchPath = launchPath
+    task.arguments = args
+    task.environment = env ?? ProcessInfo.processInfo.environment
+
+    if !FileManager.default.fileExists(atPath: SHELL_LOG_PATH.path) {
+        try? FileManager.default.createDirectory(at: SHELL_LOG_PATH.deletingLastPathComponent(), withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: SHELL_LOG_PATH.path, contents: nil, attributes: nil)
+    }
+
+    if let file = try? FileHandle(forUpdating: SHELL_LOG_PATH) {
+        file.seekToEndOfFile()
+        task.standardOutput = file
+        task.standardError = file
+    }
+
+    do {
+        try task.run()
+    } catch {
+        log("Error running \(launchPath) \(args): \(error)")
+        return nil
+    }
+
+    return task
+}
+
+private enum PingStatus: Equatable, CustomStringConvertible {
     case reachable(Double)
     case timedOut
     case slow(Double)
+
+    var description: String {
+        switch self {
+        case .reachable: "CONNECTED"
+        case .timedOut: "DISCONNECTED"
+        case .slow: "SLOW"
+        }
+    }
+
+    var time: Double {
+        switch self {
+        case let .reachable(time): time
+        case .timedOut: 0
+        case let .slow(time): time
+        }
+    }
 
     var color: NSColor {
         switch self {
@@ -124,6 +168,15 @@ private var lastPingStatus: PingStatus? {
             drawColoredTopLine(lastPingStatus.color, hideAfter: lastPingStatus.hideAfter, sound: lastPingStatus.sound)
         }
         log("Internet connection: \(lastPingStatus.message)")
+
+        if let command = CONFIG.shellCommandOnStatusChange, !command.isEmpty {
+            let cmd = "STATUS=\(lastPingStatus); \nPING_TIME=\(lastPingStatus.time.intround); \n\(command)"
+            guard let task = shellProc(args: ["-c", cmd]) else {
+                log("Failed to run shell command: \n\(cmd)")
+                return
+            }
+            log("Running shell command: \n\t\(cmd.replacingOccurrences(of: "\n", with: "\n\t"))")
+        }
     }
 }
 
@@ -335,9 +388,20 @@ struct IsThereNetApp: App {
 private let MS_REGEX_PATTERN: NSRegularExpression = try! NSRegularExpression(pattern: "([0-9.]+) ms", options: [])
 private let MAX_COUNTS = 2
 private let FPING = Bundle.main.path(forResource: "fping", ofType: nil)!
-private let LOG_PATH = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("IsThereNet.log")
+private let LOG_PATH =
+    URL(fileURLWithPath: NSHomeDirectory())
+        .appendingPathComponent(".logs")
+        .appendingPathComponent("istherenet.log")
+private let SHELL_LOG_PATH =
+    URL(fileURLWithPath: NSHomeDirectory())
+        .appendingPathComponent(".logs")
+        .appendingPathComponent("istherenet-shell-cmd.log")
+
 private let LOG_FILE: FileHandle? = {
-    guard FileManager.default.fileExists(atPath: LOG_PATH.path) || FileManager.default.createFile(atPath: LOG_PATH.path, contents: nil, attributes: nil) else {
+    try? FileManager.default.createDirectory(at: LOG_PATH.deletingLastPathComponent(), withIntermediateDirectories: true)
+    guard FileManager.default.fileExists(atPath: LOG_PATH.path)
+        || FileManager.default.createFile(atPath: LOG_PATH.path, contents: nil, attributes: nil)
+    else {
         print("Failed to create log file")
         return nil
     }
@@ -348,7 +412,10 @@ private let LOG_FILE: FileHandle? = {
     print("Logging to \(LOG_PATH.path)")
     return file
 }()
-private let CONFIG_PATH = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("config.json")
+private let CONFIG_PATH = URL(fileURLWithPath: NSHomeDirectory())
+    .appendingPathComponent(".config")
+    .appendingPathComponent("istherenet")
+    .appendingPathComponent("config.json")
 
 let SONOMA_TO_ORIGINAL_SOUND_NAMES = [
     "Mezzo": "Basso",
@@ -419,6 +486,7 @@ private struct Config: Codable, Equatable {
     var pingIntervalSeconds = 5.0
     var pingTimeoutSeconds = 1.0
     var pingSlowThresholdMilliseconds = 300.0
+    var shellCommandOnStatusChange: String? = ""
 
     var fadeSeconds: FadeSecondsConfig? = FadeSecondsConfig()
     var sounds: SoundsConfig? = SoundsConfig()
@@ -428,6 +496,18 @@ private struct Config: Codable, Equatable {
 
 private var CONFIG_FS_WATCHER: FSEventStreamRef?
 private var CONFIG: Config = {
+    if !FileManager.default.fileExists(atPath: CONFIG_PATH.deletingLastPathComponent().path) {
+        try? FileManager.default.createDirectory(at: CONFIG_PATH.deletingLastPathComponent(), withIntermediateDirectories: true)
+    }
+
+    let OLD_CONFIG_PATH = URL(fileURLWithPath: "\(NSHomeDirectory())/Library/Containers/com.lowtechguys.IsThereNet/Data/Library/Application Support/config.json")
+    if FileManager.default.fileExists(atPath: OLD_CONFIG_PATH.path),
+       let isSymlink = try? OLD_CONFIG_PATH.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink, !isSymlink
+    {
+        try? FileManager.default.moveItem(at: OLD_CONFIG_PATH, to: CONFIG_PATH)
+        try? FileManager.default.createSymbolicLink(at: OLD_CONFIG_PATH, withDestinationURL: CONFIG_PATH)
+    }
+
     print("Watching config path: \(CONFIG_PATH.path)")
 
     CONFIG_FS_WATCHER = FSEventStreamCreate(

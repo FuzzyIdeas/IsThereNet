@@ -97,6 +97,7 @@ The config file looks like this:
     "disconnected" : "systemRed"
   },
   "pingTimeoutSeconds" : 1,
-  "screen": "all"
+  "screen": "all",
+  "shellCommandOnStatusChange" : "echo 'Status changed to: '$STATUS' with ping time:' $PING_TIME"
 }
 ```
