@@ -1,0 +1,17 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>IsThereNet</title>
+        <item>
+            <title>1.6</title>
+            <pubDate>Thu, 18 Jul 2024 23:27:54 +0300</pubDate>
+            <link>https://lowtechguys.com/istherenet</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/FuzzyIdeas/IsThereNet/releases</sparkle:fullReleaseNotesLink>
+            <sparkle:version>10</sparkle:version>
+            <sparkle:shortVersionString>1.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>11.0</sparkle:minimumSystemVersion>
+            <sparkle:releaseNotesLink>https://files.lowtechguys.com/ReleaseNotes/IsThereNet-1.6.html</sparkle:releaseNotesLink>
+            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.6.dmg" length="2460917" type="application/octet-stream" sparkle:edSignature="k7tER//FCeoF66pQ2aytC6dT8/QtcsMsHBk3lnwXMJkjSFutdE4tiUnoDoPKqyR8UcrAusgAkKV3sEGwHZdCAA=="/>
+        </item>
+    </channel>
+</rss>

@@ -12,6 +12,7 @@
 		C781D4432B4592590050D04A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C781D4422B4592590050D04A /* Preview Assets.xcassets */; };
 		C781D44D2B4815510050D04A /* fping in Resources */ = {isa = PBXBuildFile; fileRef = C781D44C2B4815510050D04A /* fping */; };
 		C7AD8E8F2C36A6E5008E4182 /* ColorCode in Frameworks */ = {isa = PBXBuildFile; productRef = C7AD8E8E2C36A6E5008E4182 /* ColorCode */; };
+		C7ED2D842C49AA55006D058F /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C7ED2D832C49AA55006D058F /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C7AD8E8F2C36A6E5008E4182 /* ColorCode in Frameworks */,
+				C7ED2D842C49AA55006D058F /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,6 +94,7 @@
 			name = IsThereNet;
 			packageProductDependencies = (
 				C7AD8E8E2C36A6E5008E4182 /* ColorCode */,
+				C7ED2D832C49AA55006D058F /* Sparkle */,
 			);
 			productName = IsThereNet;
 			productReference = C781D4382B4592580050D04A /* IsThereNet.app */;
@@ -123,6 +126,7 @@
 			mainGroup = C781D42F2B4592570050D04A;
 			packageReferences = (
 				C7AD8E8D2C36A6E5008E4182 /* XCRemoteSwiftPackageReference "WFColorCode" */,
+				C7ED2D822C49AA55006D058F /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			productRefGroup = C781D4392B4592580050D04A /* Products */;
 			projectDirPath = "";
@@ -308,7 +312,7 @@
 				CODE_SIGN_ENTITLEMENTS = IsThereNet/IsThereNet.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 1.6;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"IsThereNet/Preview Content\"";
 				DEVELOPMENT_TEAM = RDDXV84A73;
@@ -326,7 +330,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.IsThereNet;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -342,7 +346,7 @@
 				CODE_SIGN_ENTITLEMENTS = IsThereNet/IsThereNet.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 1.6;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"IsThereNet/Preview Content\"";
 				DEVELOPMENT_TEAM = RDDXV84A73;
@@ -360,7 +364,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.IsThereNet;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -400,6 +404,14 @@
 				minimumVersion = 2.10.0;
 			};
 		};
+		C7ED2D822C49AA55006D058F /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.4;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -407,6 +419,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C7AD8E8D2C36A6E5008E4182 /* XCRemoteSwiftPackageReference "WFColorCode" */;
 			productName = ColorCode;
+		};
+		C7ED2D832C49AA55006D058F /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C7ED2D822C49AA55006D058F /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

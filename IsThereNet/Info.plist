@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+    <dict>
+        <key>SUPublicEDKey</key>
+        <string>lqnO6tg2A9evTIFo2SC9ArZ6NS84gtBshcAWdwh12xQ=</string>
+        <key>SUFeedURL</key>
+        <string>https://files.lowtechguys.com/istherenet/appcast.xml</string>
+        <key>SUEnableAutomaticChecks</key>
+        <true/>
+        <key>SUScheduledCheckInterval</key>
+        <integer>259200</integer>
+    </dict>
 </plist>

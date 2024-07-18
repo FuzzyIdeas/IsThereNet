@@ -62,7 +62,7 @@ If you want to monitor more complex network conditions, you can use a few differ
 IsThereNet logs internet connection status changes to:
 
 - the system log (accessible via Console.app)
-- to a file in `~/Library/Containers/com.lowtechguys.IsThereNet/Data/Library/Caches/IsThereNet.log`
+- to a file in `~/.logs/istherenet.log`
 - to the command line if you run the binary directly
 
 ## Config
@@ -70,7 +70,7 @@ IsThereNet logs internet connection status changes to:
 To keep the no-UI approach, the app can be configured through editing a JSON file. The file is located at:
 
 ```sh
-~/Library/Containers/com.lowtechguys.IsThereNet/Data/Library/Application Support/config.json
+~/.config/istherenet/config.json
 ```
 
 The config file looks like this:

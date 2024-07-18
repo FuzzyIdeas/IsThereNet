@@ -15,6 +15,7 @@ import Network
 import os.log
 import ServiceManagement
 import SwiftUI
+import Sparkle
 
 private func mainAsyncAfter(_ duration: TimeInterval, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem { action() }
@@ -171,7 +172,7 @@ private var lastPingStatus: PingStatus? {
 
         if let command = CONFIG.shellCommandOnStatusChange, !command.isEmpty {
             let cmd = "STATUS=\(lastPingStatus); \nPING_TIME=\(lastPingStatus.time.intround); \n\(command)"
-            guard let task = shellProc(args: ["-c", cmd]) else {
+            guard shellProc(args: ["-c", cmd]) != nil else {
                 log("Failed to run shell command: \n\(cmd)")
                 return
             }
@@ -378,7 +379,11 @@ private var pingRestartTask: DispatchWorkItem? {
 
 @main
 struct IsThereNetApp: App {
-    init() { start() }
+    private let updaterController: SPUStandardUpdaterController
+    init() {
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        start()
+    }
 
     var body: some Scene { Settings { EmptyView() }}
 }
