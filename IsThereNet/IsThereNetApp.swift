@@ -23,52 +23,32 @@ private func mainAsyncAfter(_ duration: TimeInterval, _ action: @escaping () -> 
     return workItem
 }
 
+@discardableResult
+@inline(__always) func mainThread<T>(_ action: () -> T) -> T {
+    guard !Thread.isMainThread else {
+        return action()
+    }
+    return DispatchQueue.main.sync { action() }
+}
+
+func mainActor(_ action: @escaping @MainActor () -> Void) {
+    Task.init { await MainActor.run { action() }}
+}
+
+@MainActor
 private func drawColoredTopLine(_ color: NSColor, hideAfter: TimeInterval = 5, sound: NSSound? = nil) {
-    DispatchQueue.main.async {
-        lastColor = color
-        lastHideAfter = hideAfter
-        fader?.cancel()
-        closer?.cancel()
+    let windows = if CONFIG.screen == "all" {
+        Window.all
+    } else if CONFIG.screen == "main" {
+        Window.all.filter(\.screen.isMain)
+    } else if let screen = CONFIG.screen?.lowercased() {
+        Window.all.filter { $0.screen.localizedName.lowercased().contains(screen) }
+    } else {
+        Window.all
+    }
 
-        let box = NSBox()
-        box.boxType = .custom
-        box.fillColor = color
-        box.frame = NSRect(x: 0, y: 10, width: NSScreen.main!.frame.width + 10, height: 3)
-
-        box.shadow = NSShadow()
-        box.shadow!.shadowColor = color
-        box.shadow!.shadowBlurRadius = 3
-        box.shadow!.shadowOffset = .init(width: 0, height: -2)
-
-        let containerView = NSView()
-        containerView.frame = NSRect(x: 0, y: 0, width: NSScreen.main!.frame.width + 10, height: 20)
-        containerView.addSubview(box)
-
-        window.setContentSize(NSSize(width: NSScreen.main!.frame.width, height: 20))
-        window.contentView = containerView
-        window.setFrameOrigin(NSPoint(x: NSScreen.main!.frame.minX - 5, y: NSScreen.main!.frame.maxY - 12))
-
-        windowController.showWindow(nil)
-        window.fade(to: 1.0) {
-            guard let appearance = menubarIcon?.button?.effectiveAppearance, appearance.isDark else {
-                return
-            }
-            window.fade(to: 0.7)
-        }
-
-        sound?.playIfNotDND()
-
-        guard hideAfter > 0 else { return }
-
-        fader = mainAsyncAfter(hideAfter) {
-            window.fade(to: 0.01, duration: 2.0)
-
-            closer = mainAsyncAfter(2.0) {
-                window.alphaValue = 0.0
-                lastColor = nil
-                lastHideAfter = nil
-            }
-        }
+    for window in windows {
+        window.draw(color, hideAfter: hideAfter, sound: sound)
     }
 }
 
@@ -140,19 +120,21 @@ private var lastPingStatus: PingStatus? {
     didSet {
         guard let lastPingStatus, lastPingStatus != oldValue else { return }
 
-        drawColoredTopLine(lastPingStatus.color, hideAfter: lastPingStatus.hideAfter, sound: lastPingStatus.sound)
+        mainActor {
+            drawColoredTopLine(lastPingStatus.color, hideAfter: lastPingStatus.hideAfter, sound: lastPingStatus.sound)
+        }
         log("Internet connection: \(lastPingStatus.message)")
     }
 }
 
 private var monitor: NWPathMonitor?
-private var process: Process? {
+@MainActor private var process: Process? {
     didSet {
         oldValue?.terminate()
         lastPingStatus = nil
     }
 }
-private var observers: [AnyCancellable] = []
+@MainActor private var observers: [AnyCancellable] = []
 private let dateFormatter: DateFormatter = {
     let d = DateFormatter()
     d.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
@@ -172,7 +154,7 @@ private func log(_ message: String) {
     LOG_FILE.write("\(line)\n".data(using: .utf8)!)
 }
 
-func start() {
+@MainActor func start() {
     NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
         .sink { _ in
             menubarIcon = NSStatusBar.system.statusItem(withLength: 1)
@@ -189,15 +171,29 @@ func start() {
             }
         }
         .store(in: &observers)
-    NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
-        .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)
-        .sink { _ in
+//    NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+//        .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)
+//        .sink { _ in
+//            guard let color = lastColor, let hideAfter = lastHideAfter else {
+//                return
+//            }
+//            drawColoredTopLine(color, hideAfter: hideAfter)
+//        }
+//        .store(in: &observers)
+
+    CGDisplayRegisterReconfigurationCallback({ displayID, flags, _ in
+        guard flags.isSubset(of: [.desktopShapeChangedFlag, .movedFlag, .setMainFlag, .setModeFlag, .removeFlag, .disabledFlag, .addFlag, .enabledFlag]) else {
+            return
+        }
+
+        mainActor {
+            Window.initAll()
             guard let color = lastColor, let hideAfter = lastHideAfter else {
                 return
             }
             drawColoredTopLine(color, hideAfter: hideAfter)
         }
-        .store(in: &observers)
+    }, nil)
 
     monitor = NWPathMonitor()
     monitor!.pathUpdateHandler = { path in
@@ -212,11 +208,12 @@ func start() {
             startPingMonitor()
         case .unsatisfied:
             log("Internet connection: OFF")
-            DispatchQueue.main.async {
+
+            mainActor {
                 process = nil
                 pingRestartTask = nil
+                drawColoredTopLine(PingStatus.timedOut.color, hideAfter: PingStatus.timedOut.hideAfter, sound: PingStatus.timedOut.sound)
             }
-            drawColoredTopLine(PingStatus.timedOut.color, hideAfter: PingStatus.timedOut.hideAfter, sound: PingStatus.timedOut.sound)
         @unknown default:
             log("Internet connection: \(path.status)")
         }
@@ -426,6 +423,7 @@ private struct Config: Codable, Equatable {
     var fadeSeconds: FadeSecondsConfig? = FadeSecondsConfig()
     var sounds: SoundsConfig? = SoundsConfig()
     var colors: ColorsConfig? = ColorsConfig()
+    var screen: String? = "all"
 }
 
 private var CONFIG_FS_WATCHER: FSEventStreamRef?
@@ -484,6 +482,18 @@ private var CONFIG: Config = {
 }()
 
 // MARK: Extensions
+
+extension NSScreen {
+    var id: CGDirectDisplayID {
+        guard let id = deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID else {
+            return 0
+        }
+        return id
+    }
+    var isMain: Bool {
+        CGDisplayIsMain(id) != 0
+    }
+}
 
 extension NSColor {
     private static let systemColors: [String: NSColor] = [
@@ -544,12 +554,13 @@ extension NSAppearance {
 
 // MARK: Window
 
-private var window: NSWindow = {
+func makeWindow(screen: NSScreen) -> NSWindow {
     let w = NSWindow(
-        contentRect: NSRect(x: 0, y: 0, width: NSScreen.main!.frame.width, height: 20),
+        contentRect: NSRect(x: -5, y: screen.frame.height - 12, width: screen.frame.width + 10, height: 20),
         styleMask: [.fullSizeContentView, .borderless],
         backing: .buffered,
-        defer: false
+        defer: false,
+        screen: screen
     )
     w.backgroundColor = .clear
     w.level = NSWindow.Level(Int(CGShieldingWindowLevel()))
@@ -558,7 +569,7 @@ private var window: NSWindow = {
     w.hasShadow = false
     w.hidesOnDeactivate = false
     w.ignoresMouseEvents = true
-    w.isReleasedWhenClosed = false
+    w.isReleasedWhenClosed = true
     w.isMovableByWindowBackground = false
 
     w.sharingType = .none
@@ -569,7 +580,87 @@ private var window: NSWindow = {
     w.alphaValue = 0.0
 
     return w
-}()
-private var windowController = NSWindowController(window: window)
-private var fader: DispatchWorkItem? { didSet { oldValue?.cancel() } }
-private var closer: DispatchWorkItem? { didSet { oldValue?.cancel() } }
+}
+
+@MainActor
+class Window {
+    init(screen: NSScreen) {
+        self.screen = screen
+        window = makeWindow(screen: screen)
+        windowController = NSWindowController(window: window)
+    }
+
+    static var all: [Window] = mainThread { NSScreen.screens.map { Window(screen: $0) } }
+
+    var window: NSWindow
+    var screen: NSScreen
+    var windowController: NSWindowController
+
+    var fader: DispatchWorkItem? {
+        didSet { oldValue?.cancel() }
+    }
+    var closer: DispatchWorkItem? {
+        didSet { oldValue?.cancel() }
+    }
+
+    static func initAll() {
+        mainThread {
+            for window in all {
+                window.window.alphaValue = 0.0
+                window.window.orderOut(nil)
+                window.window.setIsVisible(false)
+            }
+            all = NSScreen.screens.map { Window(screen: $0) }
+        }
+    }
+
+    func draw(_ color: NSColor, hideAfter: TimeInterval = 5, sound: NSSound? = nil) {
+        lastColor = color
+        lastHideAfter = hideAfter
+        fader?.cancel()
+        closer?.cancel()
+
+        let box = NSBox()
+        box.boxType = .custom
+        box.fillColor = color
+        box.frame = NSRect(x: 0, y: 10, width: screen.frame.width + 10, height: 3)
+
+        box.shadow = NSShadow()
+        box.shadow!.shadowColor = color
+        box.shadow!.shadowBlurRadius = 3
+        box.shadow!.shadowOffset = .init(width: 0, height: -2)
+
+        let containerView = NSView()
+        containerView.frame = NSRect(x: 0, y: 0, width: screen.frame.width + 10, height: 20)
+        containerView.addSubview(box)
+
+        window.setContentSize(NSSize(width: screen.frame.width + 10, height: 20))
+        window.contentView = containerView
+        window.setFrameOrigin(NSPoint(x: screen.frame.minX - 5, y: screen.frame.maxY - 12))
+
+        window.windowController?.showWindow(nil)
+        window.fade(to: 1.0) { [weak window] in
+            guard let appearance = menubarIcon?.button?.effectiveAppearance, appearance.isDark else {
+                return
+            }
+            window?.fade(to: 0.7)
+        }
+
+        if let sound, !sound.isPlaying {
+            sound.playIfNotDND()
+        }
+
+        guard hideAfter > 0 else { return }
+
+        fader = mainAsyncAfter(hideAfter) { [weak self] in
+            self?.window.fade(to: 0.01, duration: 2.0)
+
+            self?.closer = mainAsyncAfter(2.0) {
+                self?.window.alphaValue = 0.0
+                lastColor = nil
+                lastHideAfter = nil
+            }
+        }
+    }
+
+}

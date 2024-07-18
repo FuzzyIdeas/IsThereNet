@@ -96,6 +96,7 @@ The config file looks like this:
     "connected" : "systemGreen",
     "disconnected" : "systemRed"
   },
-  "pingTimeoutSeconds" : 1
+  "pingTimeoutSeconds" : 1,
+  "screen": "all"
 }
 ```
