@@ -3,15 +3,29 @@
     <channel>
         <title>IsThereNet</title>
         <item>
+            <title>1.6.1</title>
+            <pubDate>Fri, 19 Jul 2024 18:56:16 +0300</pubDate>
+            <link>https://lowtechguys.com/istherenet</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/FuzzyIdeas/IsThereNet/releases</sparkle:fullReleaseNotesLink>
+            <sparkle:version>1.6.1</sparkle:version>
+            <sparkle:shortVersionString>1.6.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>11.0</sparkle:minimumSystemVersion>
+            <sparkle:releaseNotesLink>https://files.lowtechguys.com/ReleaseNotes/IsThereNet-1.6.1.html</sparkle:releaseNotesLink>
+            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.6.1.dmg" length="2462257" type="application/octet-stream" sparkle:edSignature="WSKM5UW1Tm8FsDTOjrokPH3SIlzxMOJI1x1vfQFYvNm1xTV8QM9TmFtw5xl46JnEmVvycp5GEWficgZplxM0Dg=="/>
+            <sparkle:deltas>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.6.1-1.6.delta" sparkle:deltaFrom="1.6" length="25110" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="EiT4jO5uRD7Y6ebwR1fInYdcfqNmEmxL/tXHI8sNCFpB9Kvfd5j2nA2MfO8hQu+17S9AepIK4fLJUg0bINhZDw=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>1.6</title>
             <pubDate>Thu, 18 Jul 2024 23:27:54 +0300</pubDate>
             <link>https://lowtechguys.com/istherenet</link>
             <sparkle:fullReleaseNotesLink>https://github.com/FuzzyIdeas/IsThereNet/releases</sparkle:fullReleaseNotesLink>
-            <sparkle:version>10</sparkle:version>
+            <sparkle:version>1.6</sparkle:version>
             <sparkle:shortVersionString>1.6</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>11.0</sparkle:minimumSystemVersion>
             <sparkle:releaseNotesLink>https://files.lowtechguys.com/ReleaseNotes/IsThereNet-1.6.html</sparkle:releaseNotesLink>
-            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.6.dmg" length="2460917" type="application/octet-stream" sparkle:edSignature="k7tER//FCeoF66pQ2aytC6dT8/QtcsMsHBk3lnwXMJkjSFutdE4tiUnoDoPKqyR8UcrAusgAkKV3sEGwHZdCAA=="/>
+            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.6.dmg" length="2462057" type="application/octet-stream" sparkle:edSignature="48P473LE2a2e5q2Davgt8TOE0HO8N/vHxgwWP9OQtL6yZ7lj5taBoDuJWP/vWxANpxtG0f1ysvJKQenIHZnEAw=="/>
         </item>
     </channel>
 </rss>

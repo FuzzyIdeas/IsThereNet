@@ -14,8 +14,8 @@ import Intents
 import Network
 import os.log
 import ServiceManagement
-import SwiftUI
 import Sparkle
+import SwiftUI
 
 private func mainAsyncAfter(_ duration: TimeInterval, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem { action() }
@@ -379,13 +379,14 @@ private var pingRestartTask: DispatchWorkItem? {
 
 @main
 struct IsThereNetApp: App {
-    private let updaterController: SPUStandardUpdaterController
     init() {
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
         start()
     }
 
     var body: some Scene { Settings { EmptyView() }}
+
+    private let updaterController: SPUStandardUpdaterController
 }
 
 // MARK: Constants
@@ -477,7 +478,7 @@ private struct SoundsConfig: Codable, Equatable {
     var slowSound: NSSound? { slow != nil ? sound(named: slow!) : nil }
 
     func sound(named name: String) -> NSSound? {
-        guard let s = NSSound(named: name) ?? NSSound(named: SONOMA_TO_ORIGINAL_SOUND_NAMES[name] ?? "") else {
+        guard let s = NSSound(named: name) ?? NSSound(named: SONOMA_TO_ORIGINAL_SOUND_NAMES[name] ?? "") ?? NSSound(contentsOfFile: name.expandingTildeInPath, byReference: true) else {
             return nil
         }
 
@@ -635,6 +636,12 @@ extension NSWindow {
 
 extension NSAppearance {
     var isDark: Bool { name == .vibrantDark || name == .darkAqua }
+}
+
+extension String {
+    var expandingTildeInPath: String {
+        (self as NSString).expandingTildeInPath
+    }
 }
 
 // MARK: Window
