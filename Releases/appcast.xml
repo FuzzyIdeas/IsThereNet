@@ -3,6 +3,21 @@
     <channel>
         <title>IsThereNet</title>
         <item>
+            <title>1.6.2</title>
+            <pubDate>Sat, 20 Jul 2024 14:05:04 +0300</pubDate>
+            <link>https://lowtechguys.com/istherenet</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/FuzzyIdeas/IsThereNet/releases</sparkle:fullReleaseNotesLink>
+            <sparkle:version>1.6.2</sparkle:version>
+            <sparkle:shortVersionString>1.6.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>11.0</sparkle:minimumSystemVersion>
+            <sparkle:releaseNotesLink>https://files.lowtechguys.com/ReleaseNotes/IsThereNet-1.6.2.html</sparkle:releaseNotesLink>
+            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.6.2.dmg" length="2467158" type="application/octet-stream" sparkle:edSignature="4WLmrhsZsASrTaec2EopVqvVhJPvKWFTV+E9Y6jwY6lrJL7AU+MIQ4YQcqqdJhAwGylEFcjd04fjvHlo/XLACQ=="/>
+            <sparkle:deltas>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.6.2-1.6.1.delta" sparkle:deltaFrom="1.6.1" length="44122" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="qXiu72Vqal+Ua9/zbCrOPU9BiMFk4yT4EWZ4x/0W8b2iLKw3XUfVaaA3o1lN0Cy5bQ/9X9Tgj8LG6AO82QbJBQ=="/>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.6.2-1.6.delta" sparkle:deltaFrom="1.6" length="45090" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="G66pNFXFD4hxrQ4s0nmdMmANga7RCbvjeZQ7M6w+CenJkoNmEsPcyRGzNEInnI6ShjJw3rmFV0Cc06kJTJWvCg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>1.6.1</title>
             <pubDate>Fri, 19 Jul 2024 18:56:16 +0300</pubDate>
             <link>https://lowtechguys.com/istherenet</link>

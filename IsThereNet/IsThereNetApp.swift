@@ -377,8 +377,16 @@ private var pingRestartTask: DispatchWorkItem? {
     }
 }
 
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApplication.shared.windows.first?.close()
+    }
+}
+
 @main
 struct IsThereNetApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     init() {
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
         start()
