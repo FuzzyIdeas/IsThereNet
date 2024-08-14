@@ -11,10 +11,10 @@
             <sparkle:shortVersionString>1.6.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>11.0</sparkle:minimumSystemVersion>
             <sparkle:releaseNotesLink>https://files.lowtechguys.com/ReleaseNotes/IsThereNet-1.6.2.html</sparkle:releaseNotesLink>
-            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.6.2.dmg" length="2467158" type="application/octet-stream" sparkle:edSignature="4WLmrhsZsASrTaec2EopVqvVhJPvKWFTV+E9Y6jwY6lrJL7AU+MIQ4YQcqqdJhAwGylEFcjd04fjvHlo/XLACQ=="/>
+            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.6.2.dmg" length="2390936" type="application/octet-stream" sparkle:edSignature="8dvsRNnitNP+cyrFs8DO4LEE1VYanVXW8dcX2twEtP8aNgyAzFom+X3VsUz12ynOJL7YAn/lJHDybeSwCybSCw=="/>
             <sparkle:deltas>
-                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.6.2-1.6.1.delta" sparkle:deltaFrom="1.6.1" length="44122" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="qXiu72Vqal+Ua9/zbCrOPU9BiMFk4yT4EWZ4x/0W8b2iLKw3XUfVaaA3o1lN0Cy5bQ/9X9Tgj8LG6AO82QbJBQ=="/>
-                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.6.2-1.6.delta" sparkle:deltaFrom="1.6" length="45090" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="G66pNFXFD4hxrQ4s0nmdMmANga7RCbvjeZQ7M6w+CenJkoNmEsPcyRGzNEInnI6ShjJw3rmFV0Cc06kJTJWvCg=="/>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.6.2-1.6.1.delta" sparkle:deltaFrom="1.6.1" length="59082" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="AnI4c7vgY3K9PUUICNJ2KALtOfdVDt0ISH4/Ip7auYQiT6d0iqHZ+GaZMawO78NE+Qe5Xv9JCi3/AMuRqTKXCA=="/>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.6.2-1.6.delta" sparkle:deltaFrom="1.6" length="59018" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="Hi11eGbV1JiDAL5cX4nhjJJJCu5MFJwsSUzoa4LOmVZelyuxM1QtpvX/bKZO7k3NUZ/aK16ebSwyrEC5/KJhAw=="/>
             </sparkle:deltas>
         </item>
         <item>
