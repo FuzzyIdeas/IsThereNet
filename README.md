@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-    <a href="https://files.lowtechguys.com/IsThereNet.zip">
+    <a href="https://files.lowtechguys.com/releases/IsThereNet.dmg">
         <img width=300 src="https://files.alinpanaitiu.com/download-button-dark.svg">
     </a>
 </p>
