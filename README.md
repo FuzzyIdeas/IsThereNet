@@ -14,6 +14,7 @@
 ## Installation
 
 - Download, unzip, move to `/Applications`
+- or `brew install --cask istherenet`
 
 
 ## What does this do?
