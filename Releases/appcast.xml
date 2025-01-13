@@ -3,6 +3,22 @@
     <channel>
         <title>IsThereNet</title>
         <item>
+            <title>1.7.0</title>
+            <pubDate>Mon, 13 Jan 2025 14:39:31 +0200</pubDate>
+            <link>https://lowtechguys.com/istherenet</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/FuzzyIdeas/IsThereNet/releases</sparkle:fullReleaseNotesLink>
+            <sparkle:version>1.7.0</sparkle:version>
+            <sparkle:shortVersionString>1.7.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>11.0</sparkle:minimumSystemVersion>
+            <sparkle:releaseNotesLink>https://files.lowtechguys.com/ReleaseNotes/IsThereNet-1.7.0.html</sparkle:releaseNotesLink>
+            <enclosure url="https://files.lowtechguys.com/releases/IsThereNet-1.7.0.dmg" length="2415398" type="application/octet-stream" sparkle:edSignature="q5Vg2ouScBx8F+3A0/x8gmk9+vFFyJ/c6HhegNYLKATWk2ZnOZYXh2xeUjKw53RrjRPO6fHt0GE3ejDg8VSnAg=="/>
+            <sparkle:deltas>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.7.0-1.6.2.delta" sparkle:deltaFrom="1.6.2" length="28146" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="864784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="LQvfbxXGJNl1dtOVobMz7QhLQ4M1n9N+ufcm8qZwP+v5HhMcVqX9MLCK1ujrkPk9KHxGkZZrwYPmJhzT8RoiCQ=="/>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.7.0-1.6.1.delta" sparkle:deltaFrom="1.6.1" length="62442" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="ebs/xpvwYw7eP5m5yPm4XZAN5lWQTh/8mqPfVqQS7JouiiTJlQi+COvhmCnhRXPjcOSCeZBaUdh0se+N89cfAA=="/>
+                <enclosure url="https://files.lowtechguys.com/releases/IsThereNet1.7.0-1.6.delta" sparkle:deltaFrom="1.6" length="62122" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="865040" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="D3HEZzDZ5Jyd5p7MIiJxt+wQkh2WY7nXc9bgmsfUVlQAFT9AhL3ONEfIOoRhiOVSyc82AhDfqBT5+71RXhnoDg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>1.6.2</title>
             <pubDate>Sat, 20 Jul 2024 14:05:04 +0300</pubDate>
             <link>https://lowtechguys.com/istherenet</link>

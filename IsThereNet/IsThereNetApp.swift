@@ -275,10 +275,18 @@ private func log(_ message: String) {
     monitor!.start(queue: DispatchQueue.global())
 
     #if !DEBUG
-        if #available(macOS 13, *), SMAppService.mainApp.status == .notRegistered || SMAppService.mainApp.status == .notFound {
-            try? SMAppService.mainApp.register()
-        }
+        setupLaunchAtLogin()
     #endif
+}
+
+func setupLaunchAtLogin() {
+    if #available(macOS 13, *) {
+        if CONFIG.launchAtLogin ?? true, SMAppService.mainApp.status == .notRegistered || SMAppService.mainApp.status == .notFound {
+            try? SMAppService.mainApp.register()
+        } else if !(CONFIG.launchAtLogin ?? true), SMAppService.mainApp.status == .enabled {
+            try? SMAppService.mainApp.unregister()
+        }
+    }
 }
 
 func startPingMonitor() {
@@ -385,12 +393,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 @main
 struct IsThereNetApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
     init() {
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
         start()
     }
+
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene { Settings { EmptyView() }}
 
@@ -506,6 +514,7 @@ private struct Config: Codable, Equatable {
     var sounds: SoundsConfig? = SoundsConfig()
     var colors: ColorsConfig? = ColorsConfig()
     var screen: String? = "all"
+    var launchAtLogin: Bool? = true
 }
 
 private var CONFIG_FS_WATCHER: FSEventStreamRef?
@@ -553,6 +562,7 @@ private var CONFIG: Config = {
                 process?.terminate()
                 process = nil
                 pingRestartTask = mainAsyncAfter(1) { startPingMonitor() }
+                setupLaunchAtLogin()
             }
         },
         nil, [CONFIG_PATH.path] as [NSString] as NSArray as CFArray,

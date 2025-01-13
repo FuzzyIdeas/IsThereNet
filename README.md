@@ -99,6 +99,7 @@ The config file looks like this:
   },
   "pingTimeoutSeconds" : 1,
   "screen": "all",
+  "launchAtLogin": true,
   "shellCommandOnStatusChange" : "echo 'Status changed to: '$STATUS' with ping time:' $PING_TIME"
 }
 ```
