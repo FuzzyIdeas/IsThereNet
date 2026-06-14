@@ -39,6 +39,7 @@ upload:
 
 release:
 	gh release create v$(VERSION) -F ReleaseNotes/$(VERSION).md "Releases/IsThereNet-$(VERSION).dmg#IsThereNet.dmg"
+	git fetch --tags
 
 appcast: Releases/IsThereNet-$(FULL_VERSION).html
 	rm Releases/IsThereNet.dmg || true
