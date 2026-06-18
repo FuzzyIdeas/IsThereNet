@@ -65,7 +65,7 @@ endif
 Releases/IsThereNet-%.html: ReleaseNotes/$(VERSION)*.md
 	@echo Compiling $^ to $@
 ifneq (, $(BETA))
-	pandoc -f gfm -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css https://files.lowtechguys.com/release.css $(shell ls -t ReleaseNotes/$(VERSION)*.md)
+	pandoc -f gfm --section-divs -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css https://files.lowtechguys.com/release.css $(shell ls -t ReleaseNotes/$(VERSION)*.md)
 else
-	pandoc -f gfm -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css https://files.lowtechguys.com/release.css ReleaseNotes/$(VERSION).md
+	pandoc -f gfm --section-divs -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css https://files.lowtechguys.com/release.css ReleaseNotes/$(VERSION).md
 endif
