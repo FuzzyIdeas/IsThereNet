@@ -1,0 +1,32 @@
+{
+	"pingIntervalSeconds": 5,
+	"pingTimeoutSeconds": 1,
+	"sounds": {
+		"connected": "Submerge",
+		"slow": "Bubble",
+		"disconnected": "Jump",
+		"volume": 1
+	},
+	"colors": {
+		"connected": "systemGreen",
+		"slow": "systemYellow",
+		"disconnected": "systemRed"
+	},
+	"launchAtLogin": true,
+	"pingIP": "1.1.1.1",
+	"pingSlowThresholdMilliseconds": 300,
+	"shellCommandOnStatusChange": "",
+	"fadeSeconds": {
+		"disconnected": 0,
+		"connected": 5,
+		"slow": 10
+	},
+	"screen": "all",
+	"bar": {
+		"height": 3,
+		"gradient": {
+			"enabled": false,
+			"fadePercent": 60
+		}
+	}
+}

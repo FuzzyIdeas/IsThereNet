@@ -46,6 +46,24 @@ That IP was chosen for multiple reasons:
 
 ## Uh.. how do I quit this app?
 
+    ### Bar appearance (new)
+
+    You can adjust the thickness of the top bar and enable an optional fade gradient:
+
+    ```json
+    "bar": {
+      "height": 3,                  // Bar thickness in points (min 1, max 10 applied)
+      "gradient": {
+        "enabled": false,           // If true, fades to transparent towards the bottom
+        "fadePercent": 60           // Portion of the bar height used for the fade (1–100)
+      }
+    }
+    ```
+
+    Notes:
+    - Defaults preserve current look: height 3, gradient disabled.
+    - Values are validated: height clamped 1–10; fadePercent clamped 1–100. For very small heights (< 2), gradient is automatically disabled.
+
 The app has no Dock icon and no menubar icon so to quit it you'd need to do *one of the following*:
 
 - Launch **Activity Monitor**, find **IsThereNet** and press the ❌ button at the top
