@@ -332,6 +332,25 @@ blockquote > :first-child {
 blockquote > :last-child {
     margin-bottom: 0;
 }
+/* Several sub-points in one well read as a list: each takes a dot on a hanging indent, so a line
+   that wraps stays under its own text and the next point starts clearly apart from it. */
+blockquote:has(> p + p) {
+    padding-left: 1.55rem;
+}
+blockquote:has(> p + p) > p {
+    position: relative;
+    margin: 0.5rem 0;
+}
+blockquote:has(> p + p) > p::before {
+    content: "";
+    position: absolute;
+    top: 0.6em;
+    left: -0.85rem;
+    width: 0.32rem;
+    height: 0.32rem;
+    border-radius: 50%;
+    background: var(--mid, var(--muted));
+}
 
 code, pre, kbd {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -432,6 +451,51 @@ video[controls] {
     margin: 0.8rem auto 0.3rem;
     border-radius: 10px;
     object-fit: contain;
+}
+
+/* A bullet followed by a screenshot. Bullets and screenshots in turn otherwise read as a stack of
+   images with the sentences lost between them, so the screenshot hangs under its bullet's text, close
+   to it, a line runs from the marker down its left side, and the next bullet starts well clear of it.
+   Only the last bullet before the screenshot gets the line, and it runs on through screenshots that
+   follow one another. */
+ul:has(+ p > img, + p > video),
+ul:has(+ p > img, + p > video) > li:last-child {
+    margin-bottom: 0;
+}
+ul:has(+ p > img, + p > video) > li:last-child::after {
+    content: "";
+    position: absolute;
+    top: 1.6em;
+    bottom: 0;
+    left: calc(-0.8rem - 1.5px);
+    width: 3px;
+    border-radius: 2px 2px 0 0;
+    background: var(--soft, var(--tint));
+}
+p:has(> img, > video) {
+    position: relative;
+    margin: 0;
+    padding-left: 1.4rem;
+}
+:is(ul, p:has(> img, > video)) + p:has(> img, > video)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(0.6rem - 1.5px);
+    width: 3px;
+    border-radius: 0 0 2px 2px;
+    background: var(--soft, var(--tint));
+}
+/* Zoom halves this one too: 0.5rem above the screenshot on screen. */
+p:has(> img, > video) > :is(img, video:not([controls])) {
+    margin: 1rem 0 0;
+}
+p:has(> img, > video) > video[controls] {
+    margin: 0.5rem 0 0;
+}
+p:has(> img, > video) + ul {
+    margin-top: 2.6rem;
 }
 
 table {
