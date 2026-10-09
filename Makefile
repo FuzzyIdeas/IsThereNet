@@ -19,6 +19,10 @@ FULL_VERSION:=$(VERSION)
 endif
 
 RELEASE_NOTES_FILES := $(wildcard ReleaseNotes/*.md)
+# Browsers keep release.css for about 12 days, so pages link it with a hash of the live copy and
+# load a new stylesheet as soon as they are rebuilt.
+RELEASE_CSS_URL := https://files.lowtechguys.com/release.css
+RELEASE_CSS = $(RELEASE_CSS_URL)?v=$(shell curl -fsS $(RELEASE_CSS_URL) | md5 -q | cut -c1-8)
 ENV=Release
 DERIVED_DATA_DIR=$(shell ls -td $$HOME/Library/Developer/Xcode/DerivedData/IsThereNet-* | head -1)
 # Sparkle's generate_appcast ships as an SPM binary artifact, not on PATH. Resolve
@@ -86,9 +90,9 @@ endif
 Releases/IsThereNet-%.html: ReleaseNotes/$(VERSION)*.md
 	@echo Compiling $^ to $@
 ifneq (, $(BETA))
-	pandoc -f gfm --section-divs -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css https://files.lowtechguys.com/release.css $(shell ls -t ReleaseNotes/$(VERSION)*.md)
+	pandoc -f gfm --section-divs -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css "$(RELEASE_CSS)" $(shell ls -t ReleaseNotes/$(VERSION)*.md)
 else
-	pandoc -f gfm --section-divs -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css https://files.lowtechguys.com/release.css ReleaseNotes/$(VERSION).md
+	pandoc -f gfm --section-divs -o $@ --standalone --metadata title="IsThereNet $(FULL_VERSION) - Release Notes" --css "$(RELEASE_CSS)" ReleaseNotes/$(VERSION).md
 endif
 
 .PHONY: hooks
