@@ -35,7 +35,7 @@ print-%  : ; @echo $* = $($*)
 
 build: SHELL=fish
 build:
-	make-app --build --devid --dmg -s IsThereNet -t IsThereNet -c Release --version $(FULL_VERSION)
+	make-app --build --devid --dmg -s IsThereNet -c Release --version $(FULL_VERSION)
 	xcp /tmp/apps/IsThereNet-$(FULL_VERSION).dmg Releases/
 
 # Each upload opens its own SSH connection instead of joining a shared one, which can be stale
