@@ -28,6 +28,9 @@ DERIVED_DATA_DIR=$(shell ls -td $$HOME/Library/Developer/Xcode/DerivedData/IsThe
 # Sparkle's generate_appcast ships as an SPM binary artifact, not on PATH. Resolve
 # the newest one from the resolved SwiftPM artifacts, falling back to PATH.
 GENERATE_APPCAST=$(or $(shell ls -t $$HOME/Library/Developer/Xcode/DerivedData/IsThereNet-*/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_appcast 2>/dev/null | head -1),generate_appcast)
+# The Sparkle signing key comes from 1Password on stdin. Each Sparkle update ships a new generate_appcast
+# that the keychain item does not trust, and its password prompt blocks an unattended release.
+SPARKLE_KEY=Scripts/op-env.sh op read -n "op://Agent/Sparkle ed25519 update key/credential"
 
 .PHONY: build upload upload-dmgs upload-deltas upload-notes release setversion appcast
 
@@ -70,12 +73,12 @@ appcast: Releases/IsThereNet-$(FULL_VERSION).html
 	rm Releases/IsThereNet.dmg || true
 ifneq (, $(BETA))
 	rm Releases/IsThereNet$(FULL_VERSION)*.delta >/dev/null 2>/dev/null || true
-	$(GENERATE_APPCAST) --channel beta --maximum-versions 10 --maximum-deltas $(DELTAS) --link "https://lowtechguys.com/istherenet" --full-release-notes-url "https://github.com/FuzzyIdeas/IsThereNet/releases" --release-notes-url-prefix https://files.lowtechguys.com/ReleaseNotes/ --download-url-prefix "https://files.lowtechguys.com/releases/" -o Releases/appcast.xml Releases
+	$(SPARKLE_KEY) | $(GENERATE_APPCAST) --ed-key-file - --channel beta --maximum-versions 10 --maximum-deltas $(DELTAS) --link "https://lowtechguys.com/istherenet" --full-release-notes-url "https://github.com/FuzzyIdeas/IsThereNet/releases" --release-notes-url-prefix https://files.lowtechguys.com/ReleaseNotes/ --download-url-prefix "https://files.lowtechguys.com/releases/" -o Releases/appcast.xml Releases
 else
 	rm Releases/IsThereNet$(FULL_VERSION)*.delta >/dev/null 2>/dev/null || true
 	rm Releases/IsThereNet-*b*.dmg >/dev/null 2>/dev/null || true
 	rm Releases/IsThereNet*b*.delta >/dev/null 2>/dev/null || true
-	$(GENERATE_APPCAST) --maximum-versions 10 --maximum-deltas $(DELTAS) --link "https://lowtechguys.com/istherenet" --full-release-notes-url "https://github.com/FuzzyIdeas/IsThereNet/releases" --release-notes-url-prefix https://files.lowtechguys.com/ReleaseNotes/ --download-url-prefix "https://files.lowtechguys.com/releases/" -o Releases/appcast.xml Releases
+	$(SPARKLE_KEY) | $(GENERATE_APPCAST) --ed-key-file - --maximum-versions 10 --maximum-deltas $(DELTAS) --link "https://lowtechguys.com/istherenet" --full-release-notes-url "https://github.com/FuzzyIdeas/IsThereNet/releases" --release-notes-url-prefix https://files.lowtechguys.com/ReleaseNotes/ --download-url-prefix "https://files.lowtechguys.com/releases/" -o Releases/appcast.xml Releases
 	cp Releases/IsThereNet-$(FULL_VERSION).dmg Releases/IsThereNet.dmg
 endif
 
