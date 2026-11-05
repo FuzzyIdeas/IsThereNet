@@ -16,6 +16,7 @@ import os.log
 import ServiceManagement
 import Sparkle
 import SwiftUI
+import QuartzCore
 
 private func mainAsyncAfter(_ duration: TimeInterval, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem { action() }
@@ -503,6 +504,18 @@ private struct SoundsConfig: Codable, Equatable {
     }
 }
 
+private struct BarGradientConfig: Codable, Equatable {
+    var enabled: Bool? = false
+    // Percentage of the bar height used for the fade-to-transparent (1-100)
+    var fadePercent: Double? = 60.0
+}
+
+private struct BarConfig: Codable, Equatable {
+    // Thickness of the horizontal bar in points. Clamped at runtime.
+    var height: Double? = 3.0
+    var gradient: BarGradientConfig? = BarGradientConfig()
+}
+
 private struct Config: Codable, Equatable {
     var pingIP = "1.1.1.1"
     var pingIntervalSeconds = 5.0
@@ -515,6 +528,7 @@ private struct Config: Codable, Equatable {
     var colors: ColorsConfig? = ColorsConfig()
     var screen: String? = "all"
     var launchAtLogin: Bool? = true
+    var bar: BarConfig? = BarConfig()
 }
 
 private var CONFIG_FS_WATCHER: FSEventStreamRef?
@@ -730,19 +744,40 @@ class Window {
         fader?.cancel()
         closer?.cancel()
 
-        let box = NSBox()
-        box.boxType = .custom
-        box.fillColor = color
-        box.frame = NSRect(x: 0, y: 10, width: screen.frame.width + 10, height: 3)
+        // Resolve bar visuals from config (with clamping and fallbacks)
+        let configuredHeight = CGFloat(CONFIG.bar?.height ?? 3.0)
+        let barHeight = max(1.0, min(configuredHeight, 10.0)) // keep within the visible window height
+        let gradientEnabled = (CONFIG.bar?.gradient?.enabled ?? false) && barHeight >= 2.0
+        let fadePercent = max(1.0, min(CGFloat(CONFIG.bar?.gradient?.fadePercent ?? 60.0), 100.0))
 
-        box.shadow = NSShadow()
-        box.shadow!.shadowColor = color
-        box.shadow!.shadowBlurRadius = 3
-        box.shadow!.shadowOffset = .init(width: 0, height: -2)
+        // Create the bar view (solid or gradient)
+        let barView = NSView(frame: NSRect(x: 0, y: 10, width: screen.frame.width + 10, height: barHeight))
+        barView.wantsLayer = true
+        if gradientEnabled {
+            let grad = CAGradientLayer()
+            grad.colors = [color.cgColor, color.withAlphaComponent(0.0).cgColor]
+            grad.startPoint = CGPoint(x: 0.5, y: 1.0)
+            grad.endPoint = CGPoint(x: 0.5, y: 0.0)
+            // reach full transparency by fadePercent of the height
+            grad.locations = [0.0, NSNumber(value: Double(fadePercent / 100.0))]
+            grad.frame = barView.bounds
+            barView.layer = grad
+        } else {
+            let layer = CALayer()
+            layer.backgroundColor = color.cgColor
+            layer.frame = barView.bounds
+            barView.layer = layer
+        }
+
+        // Subtle shadow to give a soft edge under the bar
+        barView.shadow = NSShadow()
+        barView.shadow!.shadowColor = color
+        barView.shadow!.shadowBlurRadius = 3
+        barView.shadow!.shadowOffset = .init(width: 0, height: -2)
 
         let containerView = NSView()
         containerView.frame = NSRect(x: 0, y: 0, width: screen.frame.width + 10, height: 20)
-        containerView.addSubview(box)
+        containerView.addSubview(barView)
 
         window.setContentSize(NSSize(width: screen.frame.width + 10, height: 20))
         window.contentView = containerView
